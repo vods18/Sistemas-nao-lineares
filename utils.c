@@ -35,7 +35,7 @@ char** cria_jacobiana(){
 
 }
 
-newton (bag *b){
+void newton (bag *b){
 
     for(int i=0; i<b->max_iter; i++){
 
