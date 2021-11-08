@@ -48,16 +48,17 @@ void newton (bag *b){
 
 void evaluator(bag *b){
 
-    double func;
-    double* linha;
-    for(int i=0; i<=b->max_eq; i++){
-    clean_fgets(b->eq[i]);
-    void *f = evaluator_create(b->eq[i]);
-    assert(f);
+    // double func;
+    // double* linha;
+    // for(int i=0; i<=b->max_eq; i++){
+    //   clean_fgets(b->eq[i]);
+    //   void *f = evaluator_create(b->eq[i]);
+    //   assert(f);
+    // }
 
-    for(int j=0; j<b->max_eq; j++){
-      func = evaluator_evaluate_x(f, j);
-      linha[j] = func;
-    }
+    // for(int j=0; j<b->max_eq; j++){
+    //   func = evaluator_evaluate_x(f, j);
+    //   linha[j] = func;
+    // }
 
 }
