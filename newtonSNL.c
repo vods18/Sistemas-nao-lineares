@@ -4,8 +4,10 @@
 #include <math.h>
 #include "utils.h"
 #include <inttypes.h>
+#include <assert.h>
 
 #define MAX_BAG 10
+
 
 int main (){
 
@@ -25,7 +27,7 @@ int main (){
         bags[i] = malloc(sizeof(bag));
     }
     
-
+    int cont_bag=1;
 
     int i = 0;
     while(!feof(arq)){
@@ -77,15 +79,14 @@ int main (){
             fgets(x0, 100, arq);
         }
 
-        int j = 0;
-        for(i =0; i<=strlen(x0); i++){
-            if((x0[i] != ' ') && (x0[i]!='\n')){
-                char *str = &x0[i];
-                b->x0[j] = atof(str);
-                j++;
-            }
-        }
+        char **tokens;
+        int count, i;
+        const char *str = x0;
 
+        count = split(str, ' ', &tokens);
+        for (i = 0; i < count; i++){
+            b->x0[i] = atof(tokens[i]);
+        }
         
         // -------------------------------------------------------------------------------------------------------------------------------------
 
@@ -104,21 +105,24 @@ int main (){
         bags[i] = b; 
         i++;
 
+        printf("Bloco: %i\n", cont_bag);
         //--------teste entrada
-        printf("dimensão : %i\n", b->max_eq);
+        printf("Dimensão : %i\n", b->max_eq);
         for(int i=0; i<=b->max_eq -1; i++){
-            printf("equação : %s\n", b->eq[i]);
+            printf("Equação %i: %s", i, b->eq[i]);
         }
         for(int i=0; i<=b->max_eq -1; i++){
-            printf("x0 : %f\n", b->x0[i]);
+            printf("x%i: %f\n", i, b->x0[i]);
         }
 
-        printf("%f\n", b->epsilon);
-        printf("%i\n", b->max_iter);
+        printf("Epsilon: %f\n", b->epsilon);
+        printf("Max_iter: %i\n", b->max_iter);
         
         char ext = fgetc(arq);
 
         free(b);
+        cont_bag++;
+        printf("\n");
     }
 
     // evaluator();
