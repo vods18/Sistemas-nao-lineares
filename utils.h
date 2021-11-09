@@ -13,14 +13,20 @@ typedef struct{
     double* icognitas; //vetor com as icognitas
     char** jacobiana; //matriz jacobiana de derivadas
     double *x0; //iteracao inicial 
-    double epsilon; //o epsilon para o criterio
+    double epsilon; //o epsilon para o criterios
     int max_iter; //numero maximo de iteracoes 
 }bag;
 
+//void le_nome(int argc, char **argv, char* output);
+void abre_arqs(FILE *arq, FILE*arq2);
+void confere(FILE *arq, FILE *arq2);
 double timestamp();
 void clean_fgets(char *pos);
+char* gera_incognitas(int max_eq, int w);
 char*** cria_jacobiana(bag *b);
-void newton (bag *b);
+double* newton(bag *b, char*** jacobiana);
 void trab1();
+double norma_vetor(bag *b, double *x);
 int split (const char *txt, char delim, char ***tokens);
+double* analize_function(bag *b, double *x);
 #endif // __UTILS_H__

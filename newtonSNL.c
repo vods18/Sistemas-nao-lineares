@@ -6,31 +6,40 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#define MAX_BAG 5
+#define MAX_NOME 20 //maximo de caracteres para um nome de arquivo de saida
 
+int main (int argc, char **argv){
 
-int main (){
-
+    //ler dados de sistemas.dat -------------------------------------------------------------------------------------------------------------
+    FILE *arq, *arq2;
     
-    //-- ler dados de sistemas.dat ---------------------------------------
-    FILE *arq=fopen("sistemas.dat","r");
+    //abre_arqs(arq,arq2);
+    
+    char* output = malloc(MAX_NOME * sizeof(char));
+    output=malloc(MAX_NOME * sizeof(char)); // reservo espaço para um nome de ate 30 letras
+	output = "sample.out";
+    //output = le_nome(argc, argv);
 
-    if (!arq){
-      perror ("Erro ao abrir arquivo sistemas.dat") ;
-      exit (1) ; // encerra o programa com status 1
-    }
+    arq = fopen("sistemas.dat","r");
+
+    /*if (output == NULL)
+		arq = stdout; //caso nao tenha sido passado um nome, pegue da saida padrao
+	else*/
+		arq2 = fopen(output, "w"); //Crio arquivo
+    
+    //confere(arq, arq2);
 
     int cont_bag = 0;
     while(!feof(arq)){
     
         bag *b = malloc(sizeof(bag)); //declaracao de ponteiro para a estrutura contendo variaveis de acordo com formato proposto
 
-        // b->max_eq ----------------
+        // b->max_eq ------------------------------------------------------------------------------------------------------------------------
         char max_eq[24];
         fgets(max_eq, 24, arq); 
         clean_fgets(max_eq);
         b->max_eq = atoi(max_eq);
-        // --------------------------
+        // ----------------------------------------------------------------------------------------------------------------------------------
 
         // b->eq ----------------------------------------------------------------------------------------------------------------------------
         b->eq = malloc (b->max_eq * sizeof(char*)); 
@@ -52,8 +61,6 @@ int main (){
             if(b->eq[i] == NULL || b->eq[i] == "" || b->eq[i] == " " || b->eq[i] == "\n" || b->eq[i] == "\0" || ch == 13 || ch==10){ 
                 fgets(b->eq[i], 24, arq);
             }
-
-            // b->eq[i] = equacao;
 
         }
         // -------------------------------------------------------------------------------------------------------------------------------------
@@ -81,13 +88,13 @@ int main (){
         
         // -------------------------------------------------------------------------------------------------------------------------------------
 
-        // b->epsilon ----------------------------------------------------------------------------------------------------------------------------
+        // b->epsilon --------------------------------------------------------------------------------------------------------------------------
         char ep[10];
         fgets(ep, 10, arq);
         b->epsilon = atof(ep);
         // -------------------------------------------------------------------------------------------------------------------------------------
 
-        // b->max_iter ----------------------------------------------------------------------------------------------------------------------------
+        // b->max_iter -------------------------------------------------------------------------------------------------------------------------
         char max_iter[24];
         fgets(max_iter, 24, arq); //ler do arquivo dat maximo de equacoes possiveis
         clean_fgets(max_iter);
@@ -99,31 +106,24 @@ int main (){
         jacobiana = malloc(b->max_eq * sizeof(void*));
         for(int i=0; i<=b->max_eq; i++)
             jacobiana[i] = malloc(b->max_eq * sizeof(void));
-            
+   
         jacobiana = cria_jacobiana(b);
-
-        for(int a=0; a<b->max_eq; a++){
-            for(int c=0; c<b->max_eq; c++){
-                printf("%s     ", jacobiana[a][c]);
-            }
-            printf("\n");
-        }
-        
         // -------------------------------------------------------------------------------------------------------------------------------------
 
-        
+        // Método de Newton. -------------------------------------------------------------------------------------------------------------------
+        newton(b, jacobiana);
+        // -------------------------------------------------------------------------------------------------------------------------------------
+
+        // Print tempos ------------------------------------------------------------------------------------------------------------------------
+
+        // -------------------------------------------------------------------------------------------------------------------------------------
+
         char ext = fgetc(arq);
         free(b);
         cont_bag++; 
     }
-    // --------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------------------------------
 
-    
-        // implementar Eliminação de Gauss com pivoteamento parcial. 
-        // implementar função de cálculo da norma do vetor (do jeito que está no vídeo (12:26))
-
-        // implementar  Método de Newton.
-        // newton();
-    // }
     fclose(arq);
+    fclose(arq2);
 }
