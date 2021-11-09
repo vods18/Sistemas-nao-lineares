@@ -27,6 +27,7 @@ char*** cria_jacobiana(bag *b);
 double* newton(bag *b, char*** jacobiana);
 void trab1();
 double norma_vetor(bag *b, double *x);
+void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values);
 int split (const char *txt, char delim, char ***tokens);
 double* analize_function(bag *b, double *x);
 #endif // __UTILS_H__
