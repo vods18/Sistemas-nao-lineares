@@ -19,7 +19,7 @@ typedef struct{
 
 double timestamp();
 void clean_fgets(char *pos);
-char** cria_jacobiana();
+char*** cria_jacobiana(bag *b);
 void newton (bag *b);
 void trab1();
 int split (const char *txt, char delim, char ***tokens);

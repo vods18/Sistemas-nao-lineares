@@ -31,8 +31,35 @@ void norma_vetor(){
     
 }
 
-char** cria_jacobiana(){
+char*** cria_jacobiana(bag *b){
 
+  void *f, *f_dv;
+  char ***jacob;
+  double func;
+  jacob = malloc(b->max_eq * sizeof(void*));
+  for(int i=0; i<=b->max_eq; i++)
+    jacob[i] = malloc(b->max_eq * sizeof(void));
+   
+  for(int i=0; i<b->max_eq; i++){
+      clean_fgets(b->eq[i]);
+      f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
+      assert(f);
+
+      for(int j = 0; j < b->max_eq; j++){
+        
+        char var[100] = "x";  
+        char *result;
+        char num[100];
+        int teste = j+1;
+        sprintf(num, "%i", teste);
+        strcat(var, num); //x1,x2,x3,...
+
+        f_dv = evaluator_derivative (f, var); //também utilizamos essa biblioteca para calcular a derivada
+        jacob[i][j] = evaluator_get_string(f_dv);
+      }
+  }
+   
+  return (jacob);
 }
 
 void newton (bag *b){

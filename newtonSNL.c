@@ -6,12 +6,13 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#define MAX_BAG 10
+#define MAX_BAG 5
 
 
 int main (){
 
-    //-- ler dados de sistemas.dat ----------------------------------------
+    
+    //-- ler dados de sistemas.dat ---------------------------------------
     FILE *arq=fopen("sistemas.dat","r");
 
     if (!arq){
@@ -19,17 +20,7 @@ int main (){
       exit (1) ; // encerra o programa com status 1
     }
 
-
-    bag **bags; //vetor de bags, cada bag corresponde a um bloco da entrada
-    bags = malloc (MAX_BAG * sizeof(bag*));
-    
-    for (int i=0; i<MAX_BAG; i++){
-        bags[i] = malloc(sizeof(bag));
-    }
-    
-    int cont_bag=1;
-
-    int i = 0;
+    int cont_bag = 0;
     while(!feof(arq)){
     
         bag *b = malloc(sizeof(bag)); //declaracao de ponteiro para a estrutura contendo variaveis de acordo com formato proposto
@@ -48,21 +39,21 @@ int main (){
         }
 
         for(int i=0; i<=b->max_eq -1; i++){
-            char *equacao = malloc(sizeof(500)); //crio vetor auxiliar para ir recebendo por linha as funcoes dadas no dat
-            fgets(equacao, 24, arq);
+            b->eq[i] = malloc(sizeof(500)); //crio vetor auxiliar para ir recebendo por linha as funcoes dadas no dat
+            fgets(b->eq[i], 24, arq);
             char ch;
 
-            if(strlen(equacao) > 0){
-                ch = equacao[0];
+            if(strlen(b->eq[i]) > 0){
+                ch = b->eq[i][0];
             }
 
 
             // analiza se foi feita a leitura de string inválida
-            if(equacao == NULL || equacao == "" || equacao == " " || equacao == "\n" || equacao == "\0" || ch == 13 || ch==10){ 
-                fgets(equacao, 24, arq);
+            if(b->eq[i] == NULL || b->eq[i] == "" || b->eq[i] == " " || b->eq[i] == "\n" || b->eq[i] == "\0" || ch == 13 || ch==10){ 
+                fgets(b->eq[i], 24, arq);
             }
 
-            b->eq[i] = equacao;
+            // b->eq[i] = equacao;
 
         }
         // -------------------------------------------------------------------------------------------------------------------------------------
@@ -96,44 +87,43 @@ int main (){
         b->epsilon = atof(ep);
         // -------------------------------------------------------------------------------------------------------------------------------------
 
-
+        // b->max_iter ----------------------------------------------------------------------------------------------------------------------------
         char max_iter[24];
         fgets(max_iter, 24, arq); //ler do arquivo dat maximo de equacoes possiveis
         clean_fgets(max_iter);
         b->max_iter = atoi(max_iter);
+        // -------------------------------------------------------------------------------------------------------------------------------------
 
-        bags[i] = b; 
-        i++;
+        //calculo da matriz jacobiana com a entrada fornecida ----------------------------------------------------------------------------------
+        char***jacobiana;
+        jacobiana = malloc(b->max_eq * sizeof(void*));
+        for(int i=0; i<=b->max_eq; i++)
+            jacobiana[i] = malloc(b->max_eq * sizeof(void));
+            
+        jacobiana = cria_jacobiana(b);
 
-        printf("Bloco: %i\n", cont_bag);
-        //--------teste entrada
-        printf("Dimensão : %i\n", b->max_eq);
-        for(int i=0; i<=b->max_eq -1; i++){
-            printf("Equação %i: %s", i, b->eq[i]);
+        for(int a=0; a<b->max_eq; a++){
+            for(int c=0; c<b->max_eq; c++){
+                printf("%s     ", jacobiana[a][c]);
+            }
+            printf("\n");
         }
-        for(int i=0; i<=b->max_eq -1; i++){
-            printf("x%i: %f\n", i, b->x0[i]);
-        }
+        
+        // -------------------------------------------------------------------------------------------------------------------------------------
 
-        printf("Epsilon: %f\n", b->epsilon);
-        printf("Max_iter: %i\n", b->max_iter);
         
         char ext = fgetc(arq);
-
         free(b);
-        cont_bag++;
-        printf("\n");
+        cont_bag++; 
     }
-
-    // evaluator();
-
     // --------------------------------------------------------------------
 
-    // gerar matrix jacobiana com as equações fornecidas (libmatheval)
-    // e->jacobiana = cria_jacobiana();
-    // implementar Eliminação de Gauss com pivoteamento parcial. 
-    // implementar função de cálculo da norma do vetor (do jeito que está no vídeo (12:26))
+    
+        // implementar Eliminação de Gauss com pivoteamento parcial. 
+        // implementar função de cálculo da norma do vetor (do jeito que está no vídeo (12:26))
 
-    // implementar  Método de Newton.
-    // newton();
+        // implementar  Método de Newton.
+        // newton();
+    // }
+    fclose(arq);
 }
