@@ -166,11 +166,63 @@ void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq,
   }
 }
 
-//cria_sl
+double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
+    double **matrix = jacobiana_x;
+    double *vetorB = invert_x;
+    double *x = malloc(b->max_eq * sizeof(double));
 
-double* gauss_pivo(bag *b){
+    int i,j,k,d,e;
+    unsigned int n;
+    n = b->max_eq;
+ 
+    for(int i=0; i < n; ++i ) {
+      for(int k=i+1; k < n; ++k ) {
+
+        // pivoteamento parcial---------------------------
+          unsigned int iPivo = 0;
+          for(int d=i+1; d<n ; d++){
+            if (abs(matrix[d][i]) > abs(matrix[i][i])){
+              iPivo = d;
+            }
+          }
+          if (i < iPivo){
+            double aux;
+            for(int r = 0; r < n; r++){
+                aux = matrix[i][r];
+                matrix[i][r] = matrix[iPivo][r];
+                matrix[iPivo][r] = aux;
+            }
+
+            // Troca os elementos do vetor: b
+            aux = vetorB[i];
+            vetorB[i] = vetorB[iPivo];
+            vetorB[iPivo] = aux;
+
+          }
+        //-------------------------------------------------
+
+        double m = matrix[k][i] / matrix[i][i];
+        matrix[k][i] = 0.0;
+
+        for( int j=i+1; j < n; ++j ){
+          matrix[k][j] -= matrix[i][j] * m;
+        }
+
+        vetorB[k] -= vetorB[i] * m;
+      }
+    }
 
 
+    // Calculates x from x[n-1] to x[0]
+    for (int i = n - 1; i >= 0; --i) {
+      double s = 0;
+      for (int j = i + 1; j < n; ++j){
+          s = s + matrix[i][j]*x[j];
+      }
+      x[i] = (vetorB[i]-s)/matrix[i][i];
+    }
+
+    return x;
 }
 
 double* newton (bag *b, char*** jacobiana){
@@ -214,36 +266,22 @@ double* newton (bag *b, char*** jacobiana){
           }
         }
 
-        for(int d=0; d<b->max_eq; d++){
-          printf("incognitas[%d] = %s\n", d, incognitas[d]);
-        }
-
         // jacobiana(x) 
         analize_jacobiana_x(jacobiana, x, incognitas, b->max_eq, jacobiana_x);   
-        for(int i =0; i< b->max_eq; i++){
-          printf("linha %i:\n", i);
-          for(int j =0; j < b->max_eq; j++){
-            printf("%le  ", jacobiana_x[i][j]);
-          }
-          printf("\n");
-        } 
-        
         
         // -f(x)
         for(int m = 0; m< b->max_eq; m++){
           invert_x[m] = ((-1) * values[m]);
         }
 
-        for(int d=0; d<b->max_eq; d++){
-          printf("invert_x[%d] = %le\n", d, invert_x[d]);
-        }
-
         // jacobiana(x) * incognitas = - f(x) => SL
-        // incognitas = gera_incognitas(b->max_eq);
-        // cria_sl(jacobiana, incognitas, values);
-        //gauss_pivo(b); 
-        delta[0] = 1;
-        delta[2] = 1;
+ 
+        delta = eliminacaoGauss(b, jacobiana_x, invert_x);
+
+        for(int t=0; t<b->max_eq; t++){
+          printf("%le   ", delta[t]);
+        }
+        printf("\n");
          
         for(int a; a<b->max_eq; a++){
           x_novo[a] = delta[a] + x[a];
@@ -305,3 +343,4 @@ int split (const char *txt, char delim, char ***tokens)
     free (tklen);
     return count;
 }
+

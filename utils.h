@@ -15,6 +15,8 @@ typedef struct{
     double *x0; //iteracao inicial 
     double epsilon; //o epsilon para o criterios
     int max_iter; //numero maximo de iteracoes 
+    //double** sl; //sistema lienar
+    
 }bag;
 
 //void le_nome(int argc, char **argv, char* output);
@@ -30,4 +32,5 @@ double norma_vetor(bag *b, double *x);
 void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values);
 int split (const char *txt, char delim, char ***tokens);
 double* analize_function(bag *b, double *x);
+double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x);
 #endif // __UTILS_H__
