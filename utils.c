@@ -143,8 +143,8 @@ double* analize_function(bag *b, double *x){ //OK
 double norma_vetor(bag *b, double *x){ //OK
   double maior = 0;
   for(int j=0; j<b->max_eq; j++){
-    if(x[j]> maior){
-      maior = x[j];
+    if(fabs(x[j])> maior){
+      maior = fabs(x[j]);
     }
   }
 
@@ -244,80 +244,63 @@ double* newton (bag *b, char*** jacobiana){
       incognitas[j] = malloc(MAX_LIN * sizeof(char));
     }
     
-    for(int i=0; i<1; i++){
-        values = analize_function(b,x); //f(x)
+    for(int i=0; i<b->max_iter; i++){
 
-        if(norma_vetor(b, values) < b->epsilon){
-          return x;
+      printf("#\n");
+      int inter=1;
+      for(int s=0; s< b->max_eq; s++){
+        printf("x%d = %f\n", inter , x[s]);
+        inter++;
+      }
+      printf("#\n");
+
+      values = analize_function(b,x); //f(x)
+
+      if(norma_vetor(b, values) < b->epsilon){
+        return x;
+      }
+
+      // incognitas = [x1, x2, x3, ..]
+      for(int w=0; w<b->max_eq; w++){
+        char *name = malloc(2 * sizeof(char)); 
+        char var[MAX_LIN] = "x";  
+        char num[MAX_LIN];
+        int teste = w+1;
+        sprintf(num, "%i", teste);
+        strcat(var, num);
+        name = var;
+        for(int z=0; z<2; z++){
+          incognitas[w][z]=name[z];
         }
+      }
 
+      // jacobiana(x) 
+      analize_jacobiana_x(jacobiana, x, incognitas, b->max_eq, jacobiana_x);   
+      
+      // -f(x)
+      for(int m = 0; m< b->max_eq; m++){
+        invert_x[m] = ((-1) * values[m]);
+      }
 
-        // incognitas = [x1, x2, x3, ..]
-        for(int w=0; w<b->max_eq; w++){
-          char *name = malloc(2 * sizeof(char)); 
-          char var[MAX_LIN] = "x";  
-          char num[MAX_LIN];
-          int teste = w+1;
-          sprintf(num, "%i", teste);
-          strcat(var, num);
-          name = var;
-          for(int z=0; z<2; z++){
-            incognitas[w][z]=name[z];
-          }
-        }
+      // jacobiana(x) * incognitas = - f(x) => SL
 
-        // jacobiana(x) 
-        analize_jacobiana_x(jacobiana, x, incognitas, b->max_eq, jacobiana_x);   
+      delta = eliminacaoGauss(b, jacobiana_x, invert_x);
         
-        // -f(x)
-        for(int m = 0; m< b->max_eq; m++){
-          invert_x[m] = ((-1) * values[m]);
-        }
+      for(int a = 0; a<b->max_eq; a++){
+        x_novo[a] = delta[a] + x[a];
+      }
 
-        // jacobiana(x) * incognitas = - f(x) => SL
- 
-        delta = eliminacaoGauss(b, jacobiana_x, invert_x);
+      if(norma_vetor(b, delta)< b->epsilon){
+        return x_novo;
+      }
 
-        for(int t=0; t<b->max_eq; t++){
-          printf("%le   ", delta[t]);
-        }
-        printf("\n");
-         
-        for(int a; a<b->max_eq; a++){
-          x_novo[a] = delta[a] + x[a];
-        }
+      // delta  = [-1.625   ,   -1.375] 
+      // x_novo = [-0.625   ,   -3.625]
 
-        if(norma_vetor(b, delta)< b->epsilon){ //[0,07 ; -0,04]
-          return x_novo;
-        }
-
-        x = x_novo;
-
-        /*printf("#\n");
-        for(int s=0; s< b->max_eq; s++){
-          printf("x%d = ", s);
-        }
-        printf("#\n");*/
+      for(int f=0; f<b->max_eq; f++)
+        x[f] = x_novo[f];
 
     }
-    //printf("\n");
-}
-
-void evaluator(bag *b){
-
-    // double func;
-    // double* linha;
-    // for(int i=0; i<=b->max_eq; i++){
-    //   clean_fgets(b->eq[i]);
-    //   void *f = evaluator_create(b->eq[i]);
-    //   assert(f);
-    // }
-
-    // for(int j=0; j<b->max_eq; j++){
-    //   func = evaluator_evaluate_x(f, j);
-    //   linha[j] = func;
-    // }
-
 }
 
 int split (const char *txt, char delim, char ***tokens)
