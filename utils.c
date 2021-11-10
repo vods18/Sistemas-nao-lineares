@@ -133,8 +133,7 @@ double* analize_function(bag *b, double *x){ //OK
     f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
     assert(f);
     val = evaluator_evaluate(f, b->max_eq, names , x); 
-    val = fabs(val);
-    values[i] = fabs(val); 
+    values[i] = val; 
   } 
 
   return values;
@@ -147,7 +146,6 @@ double norma_vetor(bag *b, double *x){ //OK
       maior = fabs(x[j]);
     }
   }
-
   return maior;
 }
 
@@ -167,48 +165,87 @@ void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq,
 }
 
 double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
-    double **matrix = jacobiana_x;
-    double *vetorB = invert_x;
-    double *x = malloc(b->max_eq * sizeof(double));
+
+    double **matrix = malloc((b->max_eq - 1) * sizeof(double*));
+    for(int j=0; j< b->max_eq; j++){
+      matrix[j] = malloc((b->max_eq - 1) * sizeof(double));
+    }
+
+    double *vetorB = malloc((b->max_eq - 1) * sizeof(double));
+    double *x = malloc((b->max_eq - 1) * sizeof(double));
 
     int i,j,k,d,e;
     unsigned int n;
     n = b->max_eq;
+
+    for(int i=0; i < n; ++i ) {
+      for(int k=0; k < n; ++k ){
+        matrix[i,k] = jacobiana_x[i,k];
+      }
+      vetorB[i] = invert_x[i];
+    }
+
+    // printf("\n--------- matrix(x) ---------------------------------------\n");
+    // for(int h = 0; h < b->max_eq; h++){
+    //   for(int r = 0; r < b->max_eq; r++){
+    //     printf("%le    ", matrix[h][r]);
+    //   }
+    //   printf("\n");
+    // }
+    // printf("-------------------------------------------------------------\n"); 
+    // printf("\n--------- vetorB --------------------------------------------\n");
+    // for(int h = 0; h < b->max_eq; h++){
+    //   printf("%le ", vetorB[h]);
+    // }
+    // printf("\n-------------------------------------------------------------\n");
+
+
+    // pivoteamento parcial---------------------------
+    for(int i=0; i < n; ++i ) {
+      for(int k=i+1; k < n; ++k ) {
+        unsigned int iPivo = 0;
+        for(int d=i+1; d<n ; d++){
+          if (abs(matrix[d][i]) > abs(matrix[i][i])){
+            iPivo = d;
+          }
+        }
+        if (i < iPivo){
+          double aux;
+          for(int r = 0; r < n; r++){
+              aux = matrix[i][r];
+              matrix[i][r] = matrix[iPivo][r];
+              matrix[iPivo][r] = aux;
+          }
+
+          // Troca os elementos do vetor: b
+          aux = vetorB[i];
+          vetorB[i] = vetorB[iPivo];
+          vetorB[iPivo] = aux;
+        }
+      }
+    }
+    //-------------------------------------------------
  
     for(int i=0; i < n; ++i ) {
       for(int k=i+1; k < n; ++k ) {
-
-        // pivoteamento parcial---------------------------
-          unsigned int iPivo = 0;
-          for(int d=i+1; d<n ; d++){
-            if (abs(matrix[d][i]) > abs(matrix[i][i])){
-              iPivo = d;
-            }
-          }
-          if (i < iPivo){
-            double aux;
-            for(int r = 0; r < n; r++){
-                aux = matrix[i][r];
-                matrix[i][r] = matrix[iPivo][r];
-                matrix[iPivo][r] = aux;
-            }
-
-            // Troca os elementos do vetor: b
-            aux = vetorB[i];
-            vetorB[i] = vetorB[iPivo];
-            vetorB[iPivo] = aux;
-
-          }
-        //-------------------------------------------------
 
         double m = matrix[k][i] / matrix[i][i];
         matrix[k][i] = 0.0;
 
         for( int j=i+1; j < n; ++j ){
-          matrix[k][j] -= matrix[i][j] * m;
+          matrix[k][j] =  matrix[k][j] - matrix[i][j] * m;
         }
 
         vetorB[k] -= vetorB[i] * m;
+
+        // printf("\n--------- matrix(x) ---------------------------------------\n");
+        // for(int h = 0; h < b->max_eq; h++){
+        //   for(int r = 0; r < b->max_eq; r++){
+        //     printf("%le    ", matrix[h][r]);
+        //   }
+        //   printf("\n");
+        // }
+        // printf("-------------------------------------------------------------\n"); 
       }
     }
 
@@ -256,6 +293,12 @@ double* newton (bag *b, char*** jacobiana){
 
       values = analize_function(b,x); //f(x)
 
+      // printf("\n--------- X -----------------------------------------------\n");
+      // for(int h = 0; h < b->max_eq; h++){
+      //   printf("%le ", values[h]);
+      // }
+      // printf("\n-------------------------------------------------------------\n");
+
       if(norma_vetor(b, values) < b->epsilon){
         return x;
       }
@@ -277,18 +320,43 @@ double* newton (bag *b, char*** jacobiana){
       // jacobiana(x) 
       analize_jacobiana_x(jacobiana, x, incognitas, b->max_eq, jacobiana_x);   
       
+      // printf("\n--------- Jacobiana(x) --------------------------------------\n");
+      // for(int h = 0; h < b->max_eq; h++){
+      //   for(int r = 0; r < b->max_eq; r++){
+      //     printf("%le    ", jacobiana_x[h][r]);
+      //   }
+      //   printf("\n");
+      // }
+      // printf("-------------------------------------------------------------\n"); 
+      
       // -f(x)
       for(int m = 0; m< b->max_eq; m++){
         invert_x[m] = ((-1) * values[m]);
       }
+      // printf("\n--------- invert_x ------------------------------------------\n");
+      // for(int h = 0; h < b->max_eq; h++){
+      //   printf("%le ", invert_x[h]);
+      // }
+      // printf("\n-------------------------------------------------------------\n");
 
       // jacobiana(x) * incognitas = - f(x) => SL
 
       delta = eliminacaoGauss(b, jacobiana_x, invert_x);
+      // printf("\n--------- Delta ---------------------------------------------\n");
+      // for(int h = 0; h < b->max_eq; h++){
+      //   printf("%le ", delta[h]);
+      // }
+      // printf("\n-------------------------------------------------------------\n");
         
       for(int a = 0; a<b->max_eq; a++){
         x_novo[a] = delta[a] + x[a];
       }
+
+      // printf("\n--------- x/_novo -------------------------------------------\n");
+      // for(int h = 0; h < b->max_eq; h++){
+      //   printf("%le ", x_novo[h]);
+      // }
+      // printf("\n-------------------------------------------------------------\n");
 
       if(norma_vetor(b, delta)< b->epsilon){
         return x_novo;
@@ -301,6 +369,15 @@ double* newton (bag *b, char*** jacobiana){
         x[f] = x_novo[f];
 
     }
+
+    printf("#\n");
+    int inter=1;
+    for(int s=0; s< b->max_eq; s++){
+      printf("x%d = %f\n", inter , x[s]);
+      inter++;
+    }
+    printf("#\n");
+    return x;
 }
 
 int split (const char *txt, char delim, char ***tokens)
