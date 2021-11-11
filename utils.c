@@ -301,13 +301,13 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
     
     for(int i=0; i<b->max_iter; i++){
 
-      printf("#\n");
+      fprintf(arq2, "#\n");
       int inter=1;
       for(int s=0; s< b->max_eq; s++){
-        printf("x%d = %f\n", inter , x[s]);
+        fprintf(arq2, "x%d = %f\n", inter , x[s]);
         inter++;
       }
-      printf("#\n");
+      fprintf(arq2, "#\n");
 
       // incognitas = [x1, x2, x3, ..]
       for(int w=0; w<b->max_eq; w++){
@@ -356,7 +356,6 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       // printf("------------>SAÍ EIN\n");
 
       if(norma_vetor(b, values) < b->epsilon){
-        puts("A");
         return x;
       }
 
@@ -381,7 +380,6 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       }
 
       if(norma_vetor(b, delta)< b->epsilon){
-        puts("B");
         return x_novo;
       }
 
@@ -390,13 +388,13 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
 
     }
 
-    printf("#\n");
+    fprintf(arq2,"#\n");
     int inter=1;
     for(int s=0; s< b->max_eq; s++){
-      printf("x%d = %f\n", inter , x[s]);
+      fprintf(arq2,"x%d = %f\n", inter , x[s]);
       inter++;
     }
-    printf("#\n");
+    fprintf(arq2,"#\n");
     free(delta);
     free(x_novo);
     free(values);

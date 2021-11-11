@@ -25,7 +25,7 @@ int main (int argc, char **argv){
     /*if (output == NULL)
 		arq = stdout; //caso nao tenha sido passado um nome, pegue da saida padrao
 	else*/
-		arq2 = fopen(output, "w"); //Crio arquivo
+		arq2 = fopen("saida.txt", "w"); //Crio arquivo
         // fputs("aignadioga", arq2);
         // fclose(arq2);
     
@@ -116,7 +116,7 @@ int main (int argc, char **argv){
         // -------------------------------------------------------------------------------------------------------------------------------------
 
         // Método de Newton. -------------------------------------------------------------------------------------------------------------------
-        if(cont_bag < 2) {
+        if(cont_bag < 3) {
             newton(b, arq2, cont_bag);
         }
         
