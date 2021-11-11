@@ -25,12 +25,12 @@ void confere(FILE *arq, FILE *arq2);
 double timestamp();
 void clean_fgets(char *pos);
 char* gera_incognitas(int max_eq, int w);
-char*** cria_jacobiana(bag *b);
-double* newton(bag *b, char*** jacobiana);
+void cria_jacobiana(bag *b, char***jacobiana);
+double* newton(bag *b);
 void trab1();
 double norma_vetor(bag *b, double *x);
 void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values);
 int split (const char *txt, char delim, char ***tokens);
-double* analize_function(bag *b, double *x);
+void analize_function(bag *b, double *x, double *values, char **names);
 double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x);
 #endif // __UTILS_H__

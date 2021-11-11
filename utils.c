@@ -69,66 +69,39 @@ void clean_fgets(char *pos) { //OK
   strtok(pos, "\n");
 }
 
-char*** cria_jacobiana(bag *b){ //OK
+void cria_jacobiana(bag *b, char***jacobiana){ //OK
 
   void *f, *f_dv;
-  char ***jacob;
   double func;
-  jacob = malloc(b->max_eq * sizeof(void*));
-  for(int i=0; i<=b->max_eq; i++)
-    jacob[i] = malloc(b->max_eq * sizeof(void));
    
   for(int i=0; i<b->max_eq; i++){
-      clean_fgets(b->eq[i]);
-      f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
-      assert(f);
+    clean_fgets(b->eq[i]);
+    f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
+    assert(f);
 
-      for(int j = 0; j < b->max_eq; j++){
-        
-        char var[MAX_LIN] = "x";  
-        char num[MAX_LIN];
-        int teste = j+1;
-        sprintf(num, "%i", teste);
-        strcat(var, num); //x1,x2,x3,...
-
-        f_dv = evaluator_derivative (f, var); //também utilizamos essa biblioteca para calcular a derivada
-        jacob[i][j] = evaluator_get_string(f_dv);
-      }
+    for(int j = 0; j < b->max_eq; j++){
+      
+      char var[MAX_LIN] = "x";  
+      char num[MAX_LIN];
+      int teste = j+1;
+      sprintf(num, "%i", teste);
+      strcat(var, num); //x1,x2,x3,...
+      f_dv = evaluator_derivative(f, var); //também utilizamos essa biblioteca para calcular a derivada
+      assert(evaluator_get_string(f_dv));
+      jacobiana[i][j] = evaluator_get_string(f_dv);
+    }
   }
-   
-  return (jacob);
 }
 
 
-double* analize_function(bag *b, double *x){ //OK
+void analize_function(bag *b, double *x, double *values, char **names){ // TODO: ERRO TA AQUI
 
-  char **eq = b->eq;
-  void *f, *f_dv;
-  double *values = malloc(b->max_eq * sizeof(double));
   double val=0, maior = 0;
   int i;
-  
-  char *name = malloc(2 * sizeof(char)); 
-  char **names = malloc(MAX_LIN * sizeof(char*));  
-  for(int j=0; j< b->max_eq; j++){
-    names[j] = malloc(MAX_LIN * sizeof(char));
-  }
-
-  for(int w=0; w<b->max_eq; w++){
-    char *name = malloc(2 * sizeof(char)); 
-    char var[MAX_LIN] = "x";  
-    char num[MAX_LIN];
-    int teste = w+1;
-    sprintf(num, "%i", teste);
-    strcat(var, num);
-    name = var;
-    for(int z=0; z<2; z++){
-      names[w][z]=name[z];
-    }
-  }
 
   // substitui nas equações originais os valores de x0
   for(i =0; i< b->max_eq; i++){
+    void *f;
     clean_fgets(b->eq[i]);
     f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
     assert(f);
@@ -136,7 +109,6 @@ double* analize_function(bag *b, double *x){ //OK
     values[i] = val; 
   } 
 
-  return values;
 }
 
 double norma_vetor(bag *b, double *x){ //OK
@@ -151,13 +123,30 @@ double norma_vetor(bag *b, double *x){ //OK
 
 void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values){ //OK
 
+  // printf("\n--------- names ------------------------------=--------------\n");
+  // for(int h = 0; h < max_eq; h++){
+  //   printf("%s\n", names[h]);
+  // }
+  // printf("\n-------------------------------------------------------------\n");
+
+  // printf("\n--------- Jacobiana ---------------------------------------\n");
+  // for(int i =0; i< max_eq; i++){
+  //   for(int j =0; j < max_eq; j++){
+  //     printf("%s      ", jacobiana[i][j]);
+  //   }
+  //   printf("\n");
+  // }
+  // printf("-------------------------------------------------------------\n"); 
+
   for(int i =0; i< max_eq; i++){
     for(int j =0; j < max_eq; j++){
       clean_fgets(jacobiana[i][j]);
       void *f;
       double val;
+      // assert(jacobiana[i][j]);
+      // printf("i= %d , j = %d\n", i , j);
+      assert(jacobiana[i][j]);
       f = evaluator_create(jacobiana[i][j]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
-      assert(f);
       val = evaluator_evaluate(f, max_eq, names , x); 
       values[i][j] = val; 
     }
@@ -262,7 +251,7 @@ double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
     return x;
 }
 
-double* newton (bag *b, char*** jacobiana){
+double* newton (bag *b){
 
     double *x = b->x0; // valor calculado na iteração anterior x1,x2,x3,... (x0)
     double *delta = malloc((b->max_eq -1) * sizeof(double)); // valor calculado na iteração atual para x1,x2,x3,...
@@ -274,12 +263,19 @@ double* newton (bag *b, char*** jacobiana){
       jacobiana_x[s] = malloc((b->max_eq -1) * sizeof(double));
     }
    
-
-    char *name = malloc(2 * sizeof(char)); 
     char **incognitas = malloc(MAX_LIN * sizeof(char*));  
     for(int j=0; j< b->max_eq; j++){
       incognitas[j] = malloc(MAX_LIN * sizeof(char));
     }
+
+    char ***jacobina  = (char ***) malloc(sizeof(char**) * b->max_eq); //FIX 1
+    for(int i = 0; i < b->max_eq; i++){
+      jacobina[i] = (char **) malloc(sizeof(char*) * b->max_eq);  // FIX 2
+      for(int j = 0; j < b->max_eq; j++){
+        jacobina[i][j] = (char *) malloc(sizeof(char) * 100);
+      }
+    }
+    cria_jacobiana(b, jacobina);
     
     for(int i=0; i<b->max_iter; i++){
 
@@ -291,79 +287,45 @@ double* newton (bag *b, char*** jacobiana){
       }
       printf("#\n");
 
-      values = analize_function(b,x); //f(x)
-
-      // printf("\n--------- X -----------------------------------------------\n");
-      // for(int h = 0; h < b->max_eq; h++){
-      //   printf("%le ", values[h]);
-      // }
-      // printf("\n-------------------------------------------------------------\n");
-
-      if(norma_vetor(b, values) < b->epsilon){
-        return x;
-      }
-
       // incognitas = [x1, x2, x3, ..]
       for(int w=0; w<b->max_eq; w++){
-        char *name = malloc(2 * sizeof(char)); 
         char var[MAX_LIN] = "x";  
         char num[MAX_LIN];
         int teste = w+1;
         sprintf(num, "%i", teste);
         strcat(var, num);
-        name = var;
-        for(int z=0; z<2; z++){
-          incognitas[w][z]=name[z];
+        for(int z=0; z<3; z++){
+          incognitas[w][z]=var[z];
         }
       }
 
+      analize_function(b,x, values, incognitas); //f(x)
+
+      if(norma_vetor(b, values) < b->epsilon){
+        puts("A");
+        return x;
+      }
+
       // jacobiana(x) 
-      analize_jacobiana_x(jacobiana, x, incognitas, b->max_eq, jacobiana_x);   
-      
-      // printf("\n--------- Jacobiana(x) --------------------------------------\n");
-      // for(int h = 0; h < b->max_eq; h++){
-      //   for(int r = 0; r < b->max_eq; r++){
-      //     printf("%le    ", jacobiana_x[h][r]);
-      //   }
-      //   printf("\n");
-      // }
-      // printf("-------------------------------------------------------------\n"); 
+      analize_jacobiana_x(jacobina, x, incognitas, b->max_eq, jacobiana_x);   
       
       // -f(x)
       for(int m = 0; m< b->max_eq; m++){
         invert_x[m] = ((-1) * values[m]);
       }
-      // printf("\n--------- invert_x ------------------------------------------\n");
-      // for(int h = 0; h < b->max_eq; h++){
-      //   printf("%le ", invert_x[h]);
-      // }
-      // printf("\n-------------------------------------------------------------\n");
 
       // jacobiana(x) * incognitas = - f(x) => SL
 
       delta = eliminacaoGauss(b, jacobiana_x, invert_x);
-      // printf("\n--------- Delta ---------------------------------------------\n");
-      // for(int h = 0; h < b->max_eq; h++){
-      //   printf("%le ", delta[h]);
-      // }
-      // printf("\n-------------------------------------------------------------\n");
         
       for(int a = 0; a<b->max_eq; a++){
         x_novo[a] = delta[a] + x[a];
       }
 
-      // printf("\n--------- x/_novo -------------------------------------------\n");
-      // for(int h = 0; h < b->max_eq; h++){
-      //   printf("%le ", x_novo[h]);
-      // }
-      // printf("\n-------------------------------------------------------------\n");
-
       if(norma_vetor(b, delta)< b->epsilon){
+        puts("B");
         return x_novo;
       }
-
-      // delta  = [-1.625   ,   -1.375] 
-      // x_novo = [-0.625   ,   -3.625]
 
       for(int f=0; f<b->max_eq; f++)
         x[f] = x_novo[f];
