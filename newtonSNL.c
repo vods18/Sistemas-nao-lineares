@@ -17,7 +17,7 @@ int main (int argc, char **argv){
     
     char* output = malloc(MAX_NOME * sizeof(char));
     output=malloc(MAX_NOME * sizeof(char)); // reservo espaço para um nome de ate 30 letras
-	output = "saida2.txt";
+	output = "saida.txt";
     //output = le_nome(argc, argv);
 
     arq = fopen("sistemas.dat","r");
@@ -26,13 +26,18 @@ int main (int argc, char **argv){
 		arq = stdout; //caso nao tenha sido passado um nome, pegue da saida padrao
 	else*/
 		arq2 = fopen(output, "w"); //Crio arquivo
+        // fputs("aignadioga", arq2);
+        // fclose(arq2);
     
     //confere(arq, arq2);
 
     int cont_bag = 0;
     while(!feof(arq)){
-    
         bag *b = malloc(sizeof(bag)); //declaracao de ponteiro para a estrutura contendo variaveis de acordo com formato proposto
+
+        b->ttotal = 0;
+        b->ttotal = timestamp();
+
 
         // b->max_eq ------------------------------------------------------------------------------------------------------------------------
         char max_eq[24];
@@ -103,20 +108,29 @@ int main (int argc, char **argv){
 
 
         // Prints ------------------------------------------------------------------------------------------------------------------------------
-        printf("\n---------Início do bloco ------------------------------------\n");
-        printf("Dimensao:  %d\n", b->max_eq);
+        fprintf(arq2,"\n---------Início do bloco ------------------------------------\n");
+        fprintf(arq2,"Dimensao:  %d\n", b->max_eq);
         for(int h = 0; h < b->max_eq; h++){
-            printf("Equacao %i : %s\n", h + 1, b->eq[h]);
+            fprintf(arq2,"Equacao %i : %s\n", h + 1, b->eq[h]);
         }
         // -------------------------------------------------------------------------------------------------------------------------------------
 
         // Método de Newton. -------------------------------------------------------------------------------------------------------------------
-        newton(b, cont_bag);
+        if(cont_bag < 2) {
+            newton(b, arq2, cont_bag);
+        }
+        
+        b->ttotal = timestamp() - b->ttotal;
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // Print tempos ------------------------------------------------------------------------------------------------------------------------
-        printf("-------------------------------------------------------------\n");
-
+        fprintf(arq2, "###########\n");
+        fprintf(arq2, "# Tempo Total: %f\n", b->ttotal);
+        fprintf(arq2, "# Tempo Derivadas: %f\n", b->tderivadas);
+        fprintf(arq2, "# Tempo Jacobiana: %f\n", b->tjacobiana);
+        fprintf(arq2, "# Tempo SL: %f\n", b->tsl);   
+        fprintf(arq2, "###########\n");     
+        fprintf(arq2, "-------------------------------------------------------------\n");
         // -------------------------------------------------------------------------------------------------------------------------------------
 
         char ext = fgetc(arq);

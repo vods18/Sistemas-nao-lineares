@@ -15,7 +15,10 @@ typedef struct{
     double *x0; //iteracao inicial 
     double epsilon; //o epsilon para o criterios
     int max_iter; //numero maximo de iteracoes 
-    //double** sl; //sistema lienar
+    double ttotal; //tempo total
+    double tderivadas; //tempo das derivadas
+    double tjacobiana; //tempo da jacobiana
+    double tsl; //tempo da SL
     
 }bag;
 
@@ -26,7 +29,7 @@ double timestamp();
 void clean_fgets(char *pos);
 char* gera_incognitas(int max_eq, int w);
 void cria_jacobiana(bag *b, char***jacobiana);
-double* newton(bag *b, int cont_bag);
+double* newton(bag *b, FILE*arq2, int cont_bag);
 void trab1();
 double norma_vetor(bag *b, double *x);
 void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values);

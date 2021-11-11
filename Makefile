@@ -1,6 +1,6 @@
 CC     = gcc -g -std=c11
     CFLAGS =
-    LFLAGS = -lm -I/usr/local/include -L/usr/local/lib -lmatheval -std=c99
+    LFLAGS = -lm -I/usr/local/include -L/usr/local/lib -lmatheval
 
       PROG = newtonSNL
       OBJS = utils.o

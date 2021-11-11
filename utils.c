@@ -103,27 +103,27 @@ void analize_function(bag *b, double *x, double *values, char **names, int cont_
   void *f;
   for(int i = 0; i< b->max_eq; i++){
     // if(i == 1){
-    //   void  *g = malloc(24  * sizeof(void));
-    //   printf("id g: %x\n", g);
-    //   clean_fgets(b->eq[i]);
-    //   printf("-------->%s\n", b->eq[i]);
-    //   g = evaluator_create(b->eq[i]); /*SEGFAULT*/ 
-    //   printf("UFA\n");
-    //   assert(g);
-    //   val = evaluator_evaluate(g, b->max_eq, names , x); 
-    //   values[i] = val;
-    //   evaluator_destroy(g);
+    //   // void  *g = malloc(24  * sizeof(void));
+    //   // printf("id g: %x\n", g);
+    //   // clean_fgets(b->eq[i]);
+    //   // printf("-------->%s\n", b->eq[i]);
+    //   // g = evaluator_create(b->eq[i]); /*SEGFAULT*/ 
+    //   // printf("UFA\n");
+    //   // assert(g);
+    //   // val = evaluator_evaluate(g, b->max_eq, names , x); 
+    //   // values[i] = val;
+    //   // evaluator_destroy(g);
     // } else{
 
     clean_fgets(b->eq[i]);
-    printf("id f: %x\n", f);
-    printf("%s\n", b->eq[i]);
+    // printf("id f: %x\n", f);
+    // printf("%s\n", b->eq[i]);
     f = evaluator_create(b->eq[i]);
     assert(f);
     val = evaluator_evaluate(f, b->max_eq, names , x); 
     values[i] = val;
     evaluator_destroy(f);
-    // }  
+   //}  
   }
 }
 
@@ -269,8 +269,9 @@ double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
     return x;
 }
 
-double* newton (bag *b, int cont_bag){
+double* newton (bag *b, FILE* arq2, int cont_bag){
     int cont_aux=0;
+    void *f;
     double *x = b->x0; // valor calculado na iteração anterior x1,x2,x3,... (x0)
     double *delta = malloc((b->max_eq -1) * sizeof(double)); // valor calculado na iteração atual para x1,x2,x3,...
     double *x_novo = malloc((b->max_eq -1) * sizeof(double)); // x + delta
@@ -293,7 +294,10 @@ double* newton (bag *b, int cont_bag){
         jacobina[i][j] = (char *) malloc(sizeof(char) * 100);
       }
     }
+    
+    b->tderivadas = timestamp();
     cria_jacobiana(b, jacobina);
+    b->tderivadas = timestamp() - b->tderivadas;
     
     for(int i=0; i<b->max_iter; i++){
 
@@ -316,9 +320,40 @@ double* newton (bag *b, int cont_bag){
           incognitas[w][z]=var[z];
         }
       }
-      analize_function(b,x, values, incognitas, cont_bag, cont_aux); //f(x)
+      // analize_function(b,x, values, incognitas, cont_bag, cont_aux); //f(x)
+
+      // ---------------------------------------------
+      double val=0, maior = 0;
+      // printf("Contador interno: %i\n", cont_aux);
+      // substitui nas equações originais os valores de x0
+      if(cont_bag <3){
+        for(int pt = 0; pt< b->max_eq; pt++){
+          clean_fgets(b->eq[pt]);
+          // printf("id f: %x\n", f);
+          // printf("%s\n", b->eq[pt]);
+          f = evaluator_create(b->eq[pt]);
+          assert(f);
+          val = evaluator_evaluate(f, b->max_eq, incognitas , x); 
+          values[pt] = val;
+          evaluator_destroy(f);
+        }
+      } else {
+        void *g = (void*) malloc(sizeof(void*));
+        for(int pq = 0; pq< b->max_eq; pq++){
+          clean_fgets(b->eq[pq]);
+          // printf("id f: %x\n", f);
+          // printf("%s\n", b->eq[pq]);
+          g = evaluator_create(b->eq[pq]);
+          assert(g);
+          val = evaluator_evaluate(g, b->max_eq, incognitas , x); 
+          values[pq] = val;
+          evaluator_destroy(g);
+        }
+      }
+      // ---------------------------------------------
+
       cont_aux++;
-      printf("------------>SAÍ EIN\n");
+      // printf("------------>SAÍ EIN\n");
 
       if(norma_vetor(b, values) < b->epsilon){
         puts("A");
@@ -326,7 +361,9 @@ double* newton (bag *b, int cont_bag){
       }
 
       // jacobiana(x) 
+      double tjacobina = timestamp();
       analize_jacobiana_x(jacobina, x, incognitas, b->max_eq, jacobiana_x);   
+      b->tjacobiana = b->tjacobiana + (timestamp() - tjacobina);
       
       // -f(x)
       for(int m = 0; m< b->max_eq; m++){
@@ -335,7 +372,9 @@ double* newton (bag *b, int cont_bag){
 
       // jacobiana(x) * incognitas = - f(x) => SL
 
+      double tsl = timestamp();
       delta = eliminacaoGauss(b, jacobiana_x, invert_x);
+      b->tsl = b->tsl + (timestamp() - tsl);
         
       for(int a = 0; a<b->max_eq; a++){
         x_novo[a] = delta[a] + x[a];
