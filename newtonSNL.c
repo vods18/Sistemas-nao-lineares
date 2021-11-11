@@ -21,10 +21,8 @@ int main (int argc, char **argv){
     output = le_nome(argc, argv);
 
     if (output == NULL){
-        puts("SOU NULL");
 		arq2 = stdout; //caso nao tenha sido passado um nome, pegue da saida padrao
     } else{
-        puts(output);
         arq2 = fopen(output, "w"); //Crio arquivo
     }
 
