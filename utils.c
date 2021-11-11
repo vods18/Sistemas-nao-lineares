@@ -17,14 +17,11 @@ char *le_nome(int argc, char **argv){
   int option;
   while((option = getopt(argc, argv, "o: ")) != -1){		
     if(option == 'o'){   
-      puts("A");   
       return optarg; //pego o nome da imagem para escrita
     } else {
-      puts("ab");   
       return NULL;
     }
   }
-  puts("FDG");   
   return NULL;
 }
 
