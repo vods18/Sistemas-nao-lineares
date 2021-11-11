@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "limits": "c",
-        "sstream": "c",
-        "stdlib.h": "c",
-        "random": "c",
-        "typeinfo": "c"
-    }
-}
