@@ -17,28 +17,12 @@ char *le_nome(int argc, char **argv){
   int option;
   while((option = getopt(argc, argv, "o: ")) != -1){		
     if(option == 'o'){   
-      return optarg; //pego o nome da imagem para escrita
+      return optarg; //pego o nome do arquivo para escrita
     } else {
       return NULL;
     }
   }
   return NULL;
-}
-
-void abre_arqs(FILE *arq, FILE*arq2){
-  
-  char* output = malloc(MAX_NOME * sizeof(char));
-  output=malloc(MAX_NOME * sizeof(char)); // reservo espaço para um nome de ate 30 letras
-	output = "sample.out";
-  //output = le_nome(argc, argv);
-
-  arq = fopen("sistemas.dat","r");
-
-  /*if (output == NULL)
-		arq = stdout; //caso nao tenha sido passado um nome, pegue da saida padrao
-	else*/
-		arq2 = fopen(output, "w"); //Crio arquivo
-
 }
 
 void confere(FILE *arq, FILE *arq2){
@@ -98,28 +82,12 @@ void analize_function(bag *b, double *x, double *values, char **names, int cont_
   // substitui nas equações originais os valores de x0
   void *f;
   for(int i = 0; i< b->max_eq; i++){
-    // if(i == 1){
-    //   // void  *g = malloc(24  * sizeof(void));
-    //   // printf("id g: %x\n", g);
-    //   // clean_fgets(b->eq[i]);
-    //   // printf("-------->%s\n", b->eq[i]);
-    //   // g = evaluator_create(b->eq[i]); /*SEGFAULT*/ 
-    //   // printf("UFA\n");
-    //   // assert(g);
-    //   // val = evaluator_evaluate(g, b->max_eq, names , x); 
-    //   // values[i] = val;
-    //   // evaluator_destroy(g);
-    // } else{
-
     clean_fgets(b->eq[i]);
-    // printf("id f: %x\n", f);
-    // printf("%s\n", b->eq[i]);
     f = evaluator_create(b->eq[i]);
     assert(f);
     val = evaluator_evaluate(f, b->max_eq, names , x); 
     values[i] = val;
     evaluator_destroy(f);
-   //}  
   }
 }
 
@@ -134,29 +102,11 @@ double norma_vetor(bag *b, double *x){ //OK
 }
 
 void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values){ //OK
-
-  // printf("\n--------- names ------------------------------=--------------\n");
-  // for(int h = 0; h < max_eq; h++){
-  //   printf("%s\n", names[h]);
-  // }
-  // printf("\n-------------------------------------------------------------\n");
-
-  // printf("\n--------- Jacobiana ---------------------------------------\n");
-  // for(int i =0; i< max_eq; i++){
-  //   for(int j =0; j < max_eq; j++){
-  //     printf("%s      ", jacobiana[i][j]);
-  //   }
-  //   printf("\n");
-  // }
-  // printf("-------------------------------------------------------------\n"); 
-
   for(int i =0; i< max_eq; i++){
     for(int j =0; j < max_eq; j++){
       clean_fgets(jacobiana[i][j]);
       void *f;
       double val;
-      // assert(jacobiana[i][j]);
-      // printf("i= %d , j = %d\n", i , j);
       assert(jacobiana[i][j]);
       f = evaluator_create(jacobiana[i][j]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
       val = evaluator_evaluate(f, max_eq, names , x); 
@@ -185,21 +135,6 @@ double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
       }
       vetorB[i] = invert_x[i];
     }
-
-    // printf("\n--------- matrix(x) ---------------------------------------\n");
-    // for(int h = 0; h < b->max_eq; h++){
-    //   for(int r = 0; r < b->max_eq; r++){
-    //     printf("%le    ", matrix[h][r]);
-    //   }
-    //   printf("\n");
-    // }
-    // printf("-------------------------------------------------------------\n"); 
-    // printf("\n--------- vetorB --------------------------------------------\n");
-    // for(int h = 0; h < b->max_eq; h++){
-    //   printf("%le ", vetorB[h]);
-    // }
-    // printf("\n-------------------------------------------------------------\n");
-
 
     // pivoteamento parcial---------------------------
     for(int i=0; i < n; ++i ) {
@@ -238,20 +173,10 @@ double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
         }
 
         vetorB[k] -= vetorB[i] * m;
-
-        // printf("\n--------- matrix(x) ---------------------------------------\n");
-        // for(int h = 0; h < b->max_eq; h++){
-        //   for(int r = 0; r < b->max_eq; r++){
-        //     printf("%le    ", matrix[h][r]);
-        //   }
-        //   printf("\n");
-        // }
-        // printf("-------------------------------------------------------------\n"); 
       }
     }
 
 
-    // Calculates x from x[n-1] to x[0]
     for (int i = n - 1; i >= 0; --i) {
       double s = 0;
       for (int j = i + 1; j < n; ++j){
@@ -316,9 +241,8 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
           incognitas[w][z]=var[z];
         }
       }
-      // analize_function(b,x, values, incognitas, cont_bag, cont_aux); //f(x)
 
-      // ---------------------------------------------
+      // --------------------------------------------- PARTE QUE DÁ ERRO
       double val=0, maior = 0;
       // printf("Contador interno: %i\n", cont_aux);
       // substitui nas equações originais os valores de x0
@@ -349,7 +273,6 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       // ---------------------------------------------
 
       cont_aux++;
-      // printf("------------>SAÍ EIN\n");
 
       if(norma_vetor(b, values) < b->epsilon){
         return x;
@@ -366,7 +289,6 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       }
 
       // jacobiana(x) * incognitas = - f(x) => SL
-
       double tsl = timestamp();
       delta = eliminacaoGauss(b, jacobiana_x, invert_x);
       b->tsl = b->tsl + (timestamp() - tsl);
@@ -391,6 +313,7 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       inter++;
     }
     fprintf(arq2,"#\n");
+    
     free(delta);
     free(x_novo);
     free(values);
@@ -399,12 +322,6 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       free(jacobiana_x[s]);
     }
     free(jacobiana_x);
-    /*for(int i = 0; i < b->max_eq; i++){
-      free(jacobina[i]);
-      for(int j = 0; j < b->max_eq; j++){
-        free(jacobina[i][j]);
-      }
-    }*/
     for(int j=0; j< b->max_eq; j++){
       free(incognitas[j]);
     }

@@ -30,7 +30,6 @@ typedef struct{
 }bag;
 
 char *le_nome(int argc, char **argv);
-void abre_arqs(FILE *arq, FILE*arq2);
 void confere(FILE *arq, FILE *arq2);
 double timestamp();
 void clean_fgets(char *pos);

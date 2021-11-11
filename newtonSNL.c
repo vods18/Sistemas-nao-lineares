@@ -13,7 +13,6 @@ int main (int argc, char **argv){
     //ler dados de sistemas.dat -------------------------------------------------------------------------------------------------------------
     FILE *arq, *arq2;
     
-    //abre_arqs(arq,arq2);
     arq = fopen("sistemas.dat","r");
 
     char* output = malloc(MAX_NOME * sizeof(char));
@@ -25,6 +24,8 @@ int main (int argc, char **argv){
     } else{
         arq2 = fopen(output, "w"); //Crio arquivo
     }
+
+    confere(arq, arq2);
 
     int cont_bag = 0;
     while(!feof(arq)){
