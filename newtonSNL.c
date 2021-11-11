@@ -6,7 +6,7 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#define MAX_NOME 20 //maximo de caracteres para um nome de arquivo de saida
+#define MAX_NOME 100 //maximo de caracteres para um nome de arquivo de saida
 
 int main (int argc, char **argv){
 
@@ -14,22 +14,19 @@ int main (int argc, char **argv){
     FILE *arq, *arq2;
     
     //abre_arqs(arq,arq2);
-    
-    char* output = malloc(MAX_NOME * sizeof(char));
-    output=malloc(MAX_NOME * sizeof(char)); // reservo espaço para um nome de ate 30 letras
-	output = "saida.txt";
-    //output = le_nome(argc, argv);
-
     arq = fopen("sistemas.dat","r");
 
-    /*if (output == NULL)
-		arq = stdout; //caso nao tenha sido passado um nome, pegue da saida padrao
-	else*/
-		arq2 = fopen("saida.txt", "w"); //Crio arquivo
-        // fputs("aignadioga", arq2);
-        // fclose(arq2);
-    
-    //confere(arq, arq2);
+    char* output = malloc(MAX_NOME * sizeof(char));
+    output=malloc(MAX_NOME * sizeof(char)); // reservo espaço para um nome de ate 100 letras
+    output = le_nome(argc, argv);
+
+    if (output == NULL){
+        puts("SOU NULL");
+		arq2 = stdout; //caso nao tenha sido passado um nome, pegue da saida padrao
+    } else{
+        puts(output);
+        arq2 = fopen(output, "w"); //Crio arquivo
+    }
 
     int cont_bag = 0;
     while(!feof(arq)){

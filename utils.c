@@ -8,26 +8,25 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-#define MAX_NOME 20 //maximo de caracteres para um nome de arquivo de saida
+#define MAX_NOME 50 //maximo de caracteres para um nome de arquivo de saida
 #define MAX_LIN 100 //maximo de caracteres permitidas na linha de uma funcao passada no .dat
 
-/*
-void le_nome(int argc, char **argv, char* output){
-  
+char *le_nome(int argc, char **argv){ 
   int option;
-  
-  while ((option = getopt (argc, argv, "o:")) != -1) {		
-
-    switch(option) { 
-
-      case 'o':
-
-        output = optarg; //pego o nome da imagem para escrita
+  while((option = getopt(argc, argv, "o: ")) != -1){		
+    if(option == 'o'){   
+      puts("A");   
+      return optarg; //pego o nome da imagem para escrita
+    } else {
+      puts("ab");   
+      return NULL;
     }
   }
-  
-}*/
+  puts("FDG");   
+  return NULL;
+}
 
 void abre_arqs(FILE *arq, FILE*arq2){
   
@@ -327,7 +326,7 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       // printf("Contador interno: %i\n", cont_aux);
       // substitui nas equações originais os valores de x0
       if(cont_bag <3){
-        for(int pt = 0; pt< b->max_eq; pt++){
+        for(int pt = 0; pt < b->max_eq; pt++){
           clean_fgets(b->eq[pt]);
           // printf("id f: %x\n", f);
           // printf("%s\n", b->eq[pt]);

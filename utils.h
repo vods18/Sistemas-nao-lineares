@@ -1,11 +1,18 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#include <stdlib.h>
-#include <inttypes.h>
-#include <stdio.h>
+#include "utils.h"
 #include <string.h>
+#include <math.h>
+#include <matheval.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
 #include <assert.h>
+#include <sys/time.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 
 typedef struct{
     int max_eq; //numero maximo de equacoes
@@ -22,7 +29,7 @@ typedef struct{
     
 }bag;
 
-//void le_nome(int argc, char **argv, char* output);
+char *le_nome(int argc, char **argv);
 void abre_arqs(FILE *arq, FILE*arq2);
 void confere(FILE *arq, FILE *arq2);
 double timestamp();

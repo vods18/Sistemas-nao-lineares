@@ -26,10 +26,10 @@ x1 = -0.000002
 x2 = 3.000002
 #
 ###########
-# Tempo Total: 3.504150
-# Tempo Derivadas: 1.358887
-# Tempo Jacobiana: 1.124756
-# Tempo SL: 0.011230
+# Tempo Total: 0.702148
+# Tempo Derivadas: 0.282959
+# Tempo Jacobiana: 0.208984
+# Tempo SL: 0.000977
 ###########
 -------------------------------------------------------------
 
@@ -64,10 +64,10 @@ x1 = -1.817692
 x2 = 0.838026
 #
 ###########
-# Tempo Total: 3.302002
-# Tempo Derivadas: 1.204102
-# Tempo Jacobiana: 2.422852
-# Tempo SL: 0.023438
+# Tempo Total: 0.650146
+# Tempo Derivadas: 0.228027
+# Tempo Jacobiana: 0.466064
+# Tempo SL: 0.002930
 ###########
 -------------------------------------------------------------
 
@@ -135,10 +135,10 @@ x2 = 0.496611
 x3 = 0.369923
 #
 ###########
-# Tempo Total: 14.974121
-# Tempo Derivadas: 6.366211
-# Tempo Jacobiana: 8.688965
-# Tempo SL: 0.056396
+# Tempo Total: 2.433838
+# Tempo Derivadas: 1.320068
+# Tempo Jacobiana: 1.262695
+# Tempo SL: 0.005859
 ###########
 -------------------------------------------------------------
 
@@ -165,9 +165,9 @@ Equacao 9 : (3-2*x9)*x9-x8-2*x10+1
 Equacao 10 : (3-2*x10)*x10-x9+1
 
 ###########
-# Tempo Total: 0.032959
-# Tempo Derivadas: 6.366211
-# Tempo Jacobiana: 8.688965
-# Tempo SL: 0.056396
+# Tempo Total: 0.004883
+# Tempo Derivadas: 1.320068
+# Tempo Jacobiana: 1.262695
+# Tempo SL: 0.005859
 ###########
 -------------------------------------------------------------

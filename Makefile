@@ -1,21 +1,28 @@
-CC     = gcc -g -std=c11
-    CFLAGS =
-    LFLAGS = -lm -I/usr/local/include -L/usr/local/lib -lmatheval
+CC=gcc
 
-      PROG = newtonSNL
-      OBJS = utils.o
+#flags de compilacao
+CFLAGS= -g -lm -I/usr/local/include -L/usr/local/lib -lmatheval
 
-.PHONY: limpa faxina clean purge all
+#arquivos-objeto
+OBJ = newtonSNL.o
 
-%.o: %.c %.h utils.h
-	$(CC) -c $(CFLAGS) $<
+#regras de compilacao
+newtonSNL = newtonSNL.o utils.o
 
-$(PROG) : % :  $(OBJS) %.o
-	$(CC) -o $@ $^ $(LFLAGS)
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS) 
 
-limpa clean:
-	@rm -f *~ *.bak
+#regra default
+all: newtonSNL
 
-faxina purge:   limpa
-	@rm -f *.o core a.out
-	@rm -f $(PROG)
+#regras de ligacao
+newtonSNL: $(newtonSNL)
+
+	$(CC) -o $@ $^ $(CFLAGS) 
+
+.PHONY:	clean
+
+#remove arquivos temporarios
+clean: 
+
+	rm *.o 
