@@ -1,3 +1,6 @@
+//VIVIANE DE ROSA SOMMER GRR20182564
+//VINICIUS OLIVEIRA DOS SANTOS GRR20182592
+
 #include "utils.h"
 #include <string.h>
 #include <math.h>
@@ -50,9 +53,7 @@ void clean_fgets(char *pos) { //OK
 }
 
 void cria_jacobiana(bag *b, char***jacobiana){ //OK
-
   void *f, *f_dv;
-  double func;
    
   for(int i=0; i<b->max_eq; i++){
     clean_fgets(b->eq[i]);
@@ -77,7 +78,7 @@ void cria_jacobiana(bag *b, char***jacobiana){ //OK
 
 void analize_function(bag *b, double *x, double *values, char **names, int cont_bag, int cont_aux){ // TODO: ERRO TA AQUI
 
-  double val=0, maior = 0;
+  double val=0;
   printf("Contador interno: %i\n", cont_aux);
   // substitui nas equações originais os valores de x0
   void *f;
@@ -125,13 +126,12 @@ double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
     double *vetorB = malloc((b->max_eq - 1) * sizeof(double));
     double *x = malloc((b->max_eq - 1) * sizeof(double));
 
-    int i,j,k,d,e;
     unsigned int n;
     n = b->max_eq;
 
     for(int i=0; i < n; ++i ) {
       for(int k=0; k < n; ++k ){
-        matrix[i,k] = jacobiana_x[i,k];
+        matrix[i][k] = jacobiana_x[i][k];
       }
       vetorB[i] = invert_x[i];
     }
@@ -186,7 +186,6 @@ double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
     }
 
     free(matrix);
-    free(vetorB);
     return x;
 }
 
@@ -196,7 +195,7 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
     double *x = b->x0; // valor calculado na iteração anterior x1,x2,x3,... (x0)
     double *delta = malloc((b->max_eq -1) * sizeof(double)); // valor calculado na iteração atual para x1,x2,x3,...
     double *x_novo = malloc((b->max_eq -1) * sizeof(double)); // x + delta
-    double *values = malloc((b->max_eq -1) * sizeof(double));
+    double *values = malloc((b->max_eq) * sizeof(double));
     double *invert_x = malloc((b->max_eq -1) * sizeof(double));
     double **jacobiana_x = malloc((b->max_eq -1) * sizeof(double*));    
     for(int s=0; s< b->max_eq; s++){
@@ -243,7 +242,7 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       }
 
       // --------------------------------------------- PARTE QUE DÁ ERRO
-      double val=0, maior = 0;
+      double val=0;
       // printf("Contador interno: %i\n", cont_aux);
       // substitui nas equações originais os valores de x0
       if(cont_bag <3){
@@ -258,16 +257,13 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
           evaluator_destroy(f);
         }
       } else {
-        void *g = (void*) malloc(sizeof(void*));
-        for(int pq = 0; pq< b->max_eq; pq++){
+        void auto *g=0;
+        for(int volatile pq = 0; pq< b->max_eq; pq++){
           clean_fgets(b->eq[pq]);
-          // printf("id f: %x\n", f);
-          // printf("%s\n", b->eq[pq]);
           g = evaluator_create(b->eq[pq]);
           assert(g);
           val = evaluator_evaluate(g, b->max_eq, incognitas , x); 
           values[pq] = val;
-          evaluator_destroy(g);
         }
       }
       // ---------------------------------------------
@@ -313,7 +309,7 @@ double* newton (bag *b, FILE* arq2, int cont_bag){
       inter++;
     }
     fprintf(arq2,"#\n");
-    
+
     free(delta);
     free(x_novo);
     free(values);

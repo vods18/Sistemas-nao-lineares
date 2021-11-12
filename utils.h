@@ -1,3 +1,5 @@
+//VIVIANE DE ROSA SOMMER GRR20182564
+//VINICIUS OLIVEIRA DOS SANTOS GRR20182592
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
@@ -13,7 +15,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-
+//nossa struct carrega todos os valores de entrada e todos que devem estar na saida
 typedef struct{
     int max_eq; //numero maximo de equacoes
     char** eq; //matriz de strings vinda com a entrada

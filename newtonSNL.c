@@ -1,3 +1,6 @@
+//VIVIANE DE ROSA SOMMER GRR20182564
+//VINICIUS OLIVEIRA DOS SANTOS GRR20182592
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +35,10 @@ int main (int argc, char **argv){
         bag *b = malloc(sizeof(bag)); //declaracao de ponteiro para a estrutura contendo variaveis de acordo com formato proposto
 
         b->ttotal = 0;
+        b->tjacobiana = 0;
+        b->tsl = 0;
+        b->tderivadas = 0;
+
         b->ttotal = timestamp();
 
 
@@ -59,7 +66,7 @@ int main (int argc, char **argv){
 
 
             // analiza se foi feita a leitura de string inválida
-            if(b->eq[i] == NULL || b->eq[i] == "" || b->eq[i] == " " || b->eq[i] == "\n" || b->eq[i] == "\0" || ch == 13 || ch==10){ 
+            if(b->eq[i] == NULL || ch == 13 || ch==10){ 
                 fgets(b->eq[i], 24, arq);
             }
 
@@ -70,11 +77,10 @@ int main (int argc, char **argv){
         // b->x0 -------------------------------------------------------------------------------------------------------------------------------
         b->x0 = malloc((b->max_eq -1) * sizeof(double)); 
         char* x0 = malloc(100 * sizeof(char));
-        char ch;
 
         fgets(x0, 100, arq);
 
-        if(x0 == NULL || x0 == "" || x0 == " " || x0 == "\n" || x0=="0" || x0 == "\0"){
+        if(x0 == NULL){
             fgets(x0, 100, arq);
         }
 
@@ -112,7 +118,7 @@ int main (int argc, char **argv){
         // -------------------------------------------------------------------------------------------------------------------------------------
 
         // Método de Newton. -------------------------------------------------------------------------------------------------------------------
-        if(cont_bag < 3) {
+        if(cont_bag < 5) {
             newton(b, arq2, cont_bag);
         }
         
@@ -129,7 +135,7 @@ int main (int argc, char **argv){
         fprintf(arq2, "-------------------------------------------------------------\n");
         // -------------------------------------------------------------------------------------------------------------------------------------
 
-        char ext = fgetc(arq);
+        fgetc(arq); // ler \n que sobrou
         for(int c=0; c<b->max_eq; c++)
             free(b->eq[c]);
         free(b);

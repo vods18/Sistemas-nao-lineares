@@ -1,8 +1,7 @@
 CC=gcc
 
 #flags de compilacao
-CFLAGS= -g -lm -I/usr/local/include -L/usr/local/lib -lmatheval
-
+CFLAGS= -g -Wall -lm -I/usr/local/include -L/usr/local/lib -lmatheval
 #arquivos-objeto
 OBJ = newtonSNL.o
 
