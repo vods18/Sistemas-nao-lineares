@@ -16,6 +16,7 @@
 #define MAX_NOME 50 //maximo de caracteres para um nome de arquivo de saida
 #define MAX_LIN 100 //maximo de caracteres permitidas na linha de uma funcao passada no .dat
 
+//algoritmo para tratamento da linha de comando, daqui abdusimos o nome do arquivo de saida passado
 char *le_nome(int argc, char **argv){ 
   int option;
   while((option = getopt(argc, argv, "o: ")) != -1){		
@@ -40,291 +41,20 @@ void confere(FILE *arq, FILE *arq2){
     }
 }
 
+
 //calcula tempo de execucao em milisegundos
-double timestamp(){ //OK
+double timestamp(){ 
   struct timeval tp;
   gettimeofday(&tp, NULL);
   return((double)(tp.tv_sec*1000.0 + tp.tv_usec/1000.0));
 }
 
 //função para "limpar" string
-void clean_fgets(char *pos) { //OK
+void clean_fgets(char *pos) { 
   strtok(pos, "\n");
 }
 
-void cria_jacobiana(bag *b, char***jacobiana){ //OK
-  void *f, *f_dv;
-   
-  for(int i=0; i<b->max_eq; i++){
-    clean_fgets(b->eq[i]);
-    f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
-    assert(f);
-
-    for(int j = 0; j < b->max_eq; j++){
-      
-      char var[MAX_LIN] = "x";  
-      char num[MAX_LIN];
-      int teste = j+1;
-      sprintf(num, "%i", teste);
-      strcat(var, num); //x1,x2,x3,...
-      f_dv = evaluator_derivative(f, var); //também utilizamos essa biblioteca para calcular a derivada
-      assert(evaluator_get_string(f_dv));
-      jacobiana[i][j] = evaluator_get_string(f_dv);
-    }
-    evaluator_destroy(f);
-  }
-}
-
-
-void analize_function(bag *b, double *x, double *values, char **names, int cont_bag, int cont_aux){ // TODO: ERRO TA AQUI
-
-  double val=0;
-  printf("Contador interno: %i\n", cont_aux);
-  // substitui nas equações originais os valores de x0
-  void *f;
-  for(int i = 0; i< b->max_eq; i++){
-    clean_fgets(b->eq[i]);
-    f = evaluator_create(b->eq[i]);
-    assert(f);
-    val = evaluator_evaluate(f, b->max_eq, names , x); 
-    values[i] = val;
-    evaluator_destroy(f);
-  }
-}
-
-double norma_vetor(bag *b, double *x){ //OK
-  double maior = 0;
-  for(int j=0; j<b->max_eq; j++){
-    if(fabs(x[j])> maior){
-      maior = fabs(x[j]);
-    }
-  }
-  return maior;
-}
-
-void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values){ //OK
-  for(int i =0; i< max_eq; i++){
-    for(int j =0; j < max_eq; j++){
-      clean_fgets(jacobiana[i][j]);
-      void *f;
-      double val;
-      assert(jacobiana[i][j]);
-      f = evaluator_create(jacobiana[i][j]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
-      val = evaluator_evaluate(f, max_eq, names , x); 
-      values[i][j] = val; 
-      evaluator_destroy(f);
-    }
-  }
-}
-
-double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
-    double **matrix = malloc((b->max_eq - 1) * sizeof(double*));
-    for(int j=0; j< b->max_eq; j++){
-      matrix[j] = malloc((b->max_eq - 1) * sizeof(double));
-    }
-
-    double *vetorB = malloc((b->max_eq - 1) * sizeof(double));
-    double *x = malloc((b->max_eq - 1) * sizeof(double));
-
-    unsigned int n;
-    n = b->max_eq;
-
-    for(int i=0; i < n; ++i ) {
-      for(int k=0; k < n; ++k ){
-        matrix[i][k] = jacobiana_x[i][k];
-      }
-      vetorB[i] = invert_x[i];
-    }
-
-    // pivoteamento parcial---------------------------
-    for(int i=0; i < n; ++i ) {
-      for(int k=i+1; k < n; ++k ) {
-        unsigned int iPivo = 0;
-        for(int d=i+1; d<n ; d++){
-          if (abs(matrix[d][i]) > abs(matrix[i][i])){
-            iPivo = d;
-          }
-        }
-        if (i < iPivo){
-          double aux;
-          for(int r = 0; r < n; r++){
-              aux = matrix[i][r];
-              matrix[i][r] = matrix[iPivo][r];
-              matrix[iPivo][r] = aux;
-          }
-
-          // Troca os elementos do vetor: b
-          aux = vetorB[i];
-          vetorB[i] = vetorB[iPivo];
-          vetorB[iPivo] = aux;
-        }
-      }
-    }
-    //-------------------------------------------------
- 
-    for(int i=0; i < n; ++i ) {
-      for(int k=i+1; k < n; ++k ) {
-
-        double m = matrix[k][i] / matrix[i][i];
-        matrix[k][i] = 0.0;
-
-        for( int j=i+1; j < n; ++j ){
-          matrix[k][j] =  matrix[k][j] - matrix[i][j] * m;
-        }
-
-        vetorB[k] -= vetorB[i] * m;
-      }
-    }
-
-
-    for (int i = n - 1; i >= 0; --i) {
-      double s = 0;
-      for (int j = i + 1; j < n; ++j){
-          s = s + matrix[i][j]*x[j];
-      }
-      x[i] = (vetorB[i]-s)/matrix[i][i];
-    }
-
-    free(matrix);
-    return x;
-}
-
-double* newton (bag *b, FILE* arq2, int cont_bag){
-    int cont_aux=0;
-    void *f;
-    double *x = b->x0; // valor calculado na iteração anterior x1,x2,x3,... (x0)
-    double *delta = malloc((b->max_eq -1) * sizeof(double)); // valor calculado na iteração atual para x1,x2,x3,...
-    double *x_novo = malloc((b->max_eq -1) * sizeof(double)); // x + delta
-    double *values = malloc((b->max_eq) * sizeof(double));
-    double *invert_x = malloc((b->max_eq -1) * sizeof(double));
-    double **jacobiana_x = malloc((b->max_eq -1) * sizeof(double*));    
-    for(int s=0; s< b->max_eq; s++){
-      jacobiana_x[s] = malloc((b->max_eq -1) * sizeof(double));
-    }
-   
-    char **incognitas = malloc(MAX_LIN * sizeof(char*));  
-    for(int j=0; j< b->max_eq; j++){
-      incognitas[j] = malloc(MAX_LIN * sizeof(char));
-    }
-
-    char ***jacobina  = (char ***) malloc(sizeof(char**) * b->max_eq); //FIX 1
-    for(int i = 0; i < b->max_eq; i++){
-      jacobina[i] = (char **) malloc(sizeof(char*) * b->max_eq);  // FIX 2
-      for(int j = 0; j < b->max_eq; j++){
-        jacobina[i][j] = (char *) malloc(sizeof(char) * 100);
-      }
-    }
-    
-    b->tderivadas = timestamp();
-    cria_jacobiana(b, jacobina);
-    b->tderivadas = timestamp() - b->tderivadas;
-    
-    for(int i=0; i<b->max_iter; i++){
-
-      fprintf(arq2, "#\n");
-      int inter=1;
-      for(int s=0; s< b->max_eq; s++){
-        fprintf(arq2, "x%d = %f\n", inter , x[s]);
-        inter++;
-      }
-      fprintf(arq2, "#\n");
-
-      // incognitas = [x1, x2, x3, ..]
-      for(int w=0; w<b->max_eq; w++){
-        char var[MAX_LIN] = "x";  
-        char num[MAX_LIN];
-        int teste = w+1;
-        sprintf(num, "%i", teste);
-        strcat(var, num);
-        for(int z=0; z<3; z++){
-          incognitas[w][z]=var[z];
-        }
-      }
-
-      // --------------------------------------------- PARTE QUE DÁ ERRO
-      double val=0;
-      // printf("Contador interno: %i\n", cont_aux);
-      // substitui nas equações originais os valores de x0
-      if(cont_bag <3){
-        for(int pt = 0; pt < b->max_eq; pt++){
-          clean_fgets(b->eq[pt]);
-          // printf("id f: %x\n", f);
-          // printf("%s\n", b->eq[pt]);
-          f = evaluator_create(b->eq[pt]);
-          assert(f);
-          val = evaluator_evaluate(f, b->max_eq, incognitas , x); 
-          values[pt] = val;
-          evaluator_destroy(f);
-        }
-      } else {
-        void auto *g=0;
-        for(int volatile pq = 0; pq< b->max_eq; pq++){
-          clean_fgets(b->eq[pq]);
-          g = evaluator_create(b->eq[pq]);
-          assert(g);
-          val = evaluator_evaluate(g, b->max_eq, incognitas , x); 
-          values[pq] = val;
-        }
-      }
-      // ---------------------------------------------
-
-      cont_aux++;
-
-      if(norma_vetor(b, values) < b->epsilon){
-        return x;
-      }
-
-      // jacobiana(x) 
-      double tjacobina = timestamp();
-      analize_jacobiana_x(jacobina, x, incognitas, b->max_eq, jacobiana_x);   
-      b->tjacobiana = b->tjacobiana + (timestamp() - tjacobina);
-      
-      // -f(x)
-      for(int m = 0; m< b->max_eq; m++){
-        invert_x[m] = ((-1) * values[m]);
-      }
-
-      // jacobiana(x) * incognitas = - f(x) => SL
-      double tsl = timestamp();
-      delta = eliminacaoGauss(b, jacobiana_x, invert_x);
-      b->tsl = b->tsl + (timestamp() - tsl);
-        
-      for(int a = 0; a<b->max_eq; a++){
-        x_novo[a] = delta[a] + x[a];
-      }
-
-      if(norma_vetor(b, delta)< b->epsilon){
-        return x_novo;
-      }
-
-      for(int f=0; f<b->max_eq; f++)
-        x[f] = x_novo[f];
-
-    }
-
-    fprintf(arq2,"#\n");
-    int inter=1;
-    for(int s=0; s< b->max_eq; s++){
-      fprintf(arq2,"x%d = %f\n", inter , x[s]);
-      inter++;
-    }
-    fprintf(arq2,"#\n");
-
-    free(delta);
-    free(x_novo);
-    free(values);
-    free(invert_x);
-    for(int s=0; s< b->max_eq; s++){
-      free(jacobiana_x[s]);
-    }
-    free(jacobiana_x);
-    for(int j=0; j< b->max_eq; j++){
-      free(incognitas[j]);
-    }
-    
-    return x;
-}
-
+//algoritmo para repartir as strings coletadas no arquivo de entrada
 int split (const char *txt, char delim, char ***tokens)
 {
     int *tklen, *t, count = 1;
@@ -348,4 +78,282 @@ int split (const char *txt, char delim, char ***tokens)
     free (tklen);
     return count;
 }
+
+
+//criacao da jacobiana utilizando as derivadas
+void cria_jacobiana(bag *b, char***jacobiana){ 
+  void *f, *f_dv;
+  char *valor_x = malloc(MAX_LIN * sizeof(char));
+   
+  for(int i=0; i<b->max_eq; i++){
+
+    clean_fgets(b->eq[i]);
+    f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
+    assert(f);
+
+    for(int j = 0; j < b->max_eq; j++){
+      int coef = j+1;
+      sprintf(valor_x, "x%i", coef); // incognitas = [x1, x2, x3, ..]
+      f_dv = evaluator_derivative(f, valor_x); //também utilizamos essa biblioteca para calcular a derivada
+      assert(evaluator_get_string(f_dv));
+      jacobiana[i][j] = evaluator_get_string(f_dv); //passamos a funcao como string pra jacobiana
+    }
+  }
+  evaluator_destroy(f);
+  free(f_dv);
+  free(valor_x);
+}
+
+//substitui nas equações originais os valores de x
+void anali_function(bag *b, double *x, double *values, char **names, int cont_bag){ 
+  void* f;
+  double val = 0;
+  
+  for(int i = 0; i < b->max_eq; i++){
+    clean_fgets(b->eq[i]);
+    f = evaluator_create(b->eq[i]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
+    assert(f);
+    val = evaluator_evaluate(f, b->max_eq, names , x); 
+    values[i] = val;
+  }
+  
+  evaluator_destroy(f);
+}
+
+//calcula da norma do vetor como no video
+double norma_vetor(bag *b, double *x){ 
+  double maior = 0;
+  for(int j=0; j<b->max_eq; j++){
+    if(fabs(x[j])> maior){
+      maior = fabs(x[j]);
+    }
+  }
+  return maior;
+}
+
+void analize_jacobiana_x(char*** jacobiana, double* x, char **names, int max_eq, double** values){ 
+  void *f;
+  double val = 0;
+
+  for(int i = 0; i < max_eq; i++){
+    for(int j = 0; j < max_eq; j++){
+      clean_fgets(jacobiana[i][j]);
+      assert(jacobiana[i][j]);
+      f = evaluator_create(jacobiana[i][j]); //utilizamos as funções de cálculo de funções definidas pela biblioteca MATHEVAL
+      val = evaluator_evaluate(f, max_eq, names , x); 
+      values[i][j] = val; //guardando valores resultantes do evaluate com o uso do x
+    }
+  }
+  evaluator_destroy(f);
+
+}
+
+//calculos para eliminacao de gaus por pivoteamento parcial na nova matriz jacobiana modificadas pelos valores de x
+double *eliminacaoGauss(bag *b, double** jacobiana_x, double *invert_x){
+
+    double *x = malloc(b->max_eq * sizeof(double));
+    unsigned int iPivo = 0;
+    double aux, m , s;
+
+    //"falhando graciosamente"
+    if(!x){
+      fprintf(stderr, "Erro ao alocar variáveis\n");
+    }
+
+    // pivoteamento parcial---------------------------
+    for(int i = 0; i < b->max_eq; ++i ) {
+      for(int k = i+1; k < b->max_eq; ++k ) {
+        iPivo = 0;
+        for(int d=i+1; d < b->max_eq ; d++){
+          if (abs(jacobiana_x[d][i]) > abs(jacobiana_x[i][i])){
+            iPivo = d;
+          }
+        }
+        if (i < iPivo){
+          for(int r = 0; r < b->max_eq; r++){
+              aux = jacobiana_x[i][r];
+              jacobiana_x[i][r] = jacobiana_x[iPivo][r];
+              jacobiana_x[iPivo][r] = aux;
+          }
+
+          // Troca os elementos do vetor: b
+          aux = invert_x[i];
+          invert_x[i] = invert_x[iPivo];
+          invert_x[iPivo] = aux;
+        }
+      }
+    }
+    //-------------------------------------------------
+ 
+    // Gauss ------------------------------------------
+
+    for(int i=0; i < b->max_eq; ++i ) {
+      for(int k=i+1; k < b->max_eq; ++k ) {
+        m = jacobiana_x[k][i] / jacobiana_x[i][i];
+        jacobiana_x[k][i] = 0.0;
+
+        for( int j=i+1; j < b->max_eq; ++j ){
+          jacobiana_x[k][j] =  jacobiana_x[k][j] - jacobiana_x[i][j] * m;
+        }
+
+        invert_x[k] -= invert_x[i] * m;
+      }
+    }
+
+    //-------------------------------------------------
+
+    // Cálculo do valor de cada variável --------------
+
+    for (int i = b->max_eq - 1; i >= 0; --i) {
+      s = 0;
+      for (int j = i + 1; j < b->max_eq; ++j){
+          s = s + jacobiana_x[i][j]*x[j];
+      }
+      x[i] = (invert_x[i]-s)/jacobiana_x[i][i];
+    }
+
+    //-------------------------------------------------
+
+
+    return x;
+}
+
+double* newton (bag *b, FILE* arq2, int cont_bag){
+    
+    //alocacoes dinamicas para os vetores e matrizes usados
+
+    double *x = b->x0; // valor calculado na iteração anterior x1,x2,x3,... (x0)
+    double *delta = malloc((b->max_eq -1) * sizeof(double)); // valor calculado na iteração atual para x1,x2,x3,...
+    double *x_novo = malloc((b->max_eq -1) * sizeof(double)); // x + delta
+    double *values = malloc((b->max_eq) * sizeof(double)); //valores resultado das funcoes
+    double *invert_x = malloc((b->max_eq -1) * sizeof(double)); //x invertido -f(x)
+
+    double **jacobiana_x = malloc((b->max_eq -1) * sizeof(double*)); //matriz jacobiana apos valores de x  
+    for(int s=0; s< b->max_eq; s++){
+      jacobiana_x[s] = malloc((b->max_eq -1) * sizeof(double));
+    }
+    char **incognitas = malloc(MAX_LIN * sizeof(char*));  // incognitas = [x1, x2, x3, ..]
+    for(int j=0; j< b->max_eq; j++){
+      incognitas[j] = malloc(MAX_LIN * sizeof(char));
+    }
+
+    int coef=0;
+    for(int w=0; w<b->max_eq; w++){  
+      coef = w+1;
+      sprintf(incognitas[w], "x%i", coef); // incognitas = [x1, x2, x3, ..]
+    }
+    
+    char ***jacobiana  = (char ***) malloc(sizeof(char**) * b->max_eq); //matriz 3d jacobiana, cada posicao i,j uma string
+    for(int i = 0; i < b->max_eq; i++){
+      jacobiana[i] = (char **) malloc(sizeof(char*) * b->max_eq);  
+      for(int j = 0; j < b->max_eq; j++){
+        jacobiana[i][j] = (char *) malloc(sizeof(char) * 100);
+      }
+    }
+
+    //"falhando graciosamente"
+    if(!delta || !x || !x_novo || !values || !invert_x || !jacobiana_x || !incognitas || !jacobiana){
+      fprintf(stderr, "Erro ao alocar variáveis\n");
+    }
+
+
+    b->tderivadas = timestamp();
+    cria_jacobiana(b, jacobiana); //crio matriz jacobiana e calculo o tempo
+    b->tderivadas = timestamp() - b->tderivadas;
+
+
+  //LOOP DE ITERACOES --------------------------------------------------------------------------------------------------------
+
+    for(int i=0; i<b->max_iter; i++){
+
+      //impressao das iteracoes x
+      fprintf(arq2, "#\n");
+      int inter=1;
+      for(int s=0; s< b->max_eq; s++){
+        fprintf(arq2, "x%d = %f\n", inter , x[s]);
+        inter++;
+      }
+      fprintf(arq2, "#\n");
+    
+      //utiliza valores de x nas funcoes para calcular os resultados
+      anali_function(b, x, values, incognitas, cont_bag);
+
+      //confeir se devo seguir com a iteracao
+      if(norma_vetor(b, values) < b->epsilon){
+        return x;
+      }
+
+      // jacobiana(x) e calculo do tempo da mesma
+      double tjacobina = timestamp();
+      analize_jacobiana_x(jacobiana, x, incognitas, b->max_eq, jacobiana_x);   
+      b->tjacobiana = b->tjacobiana + (timestamp() - tjacobina);
+      
+      // -f(x)
+      for(int m = 0; m< b->max_eq; m++){
+        invert_x[m] = ((-1) * values[m]);
+      }
+
+      // jacobiana(x) * incognitas = - f(x) => SL
+      double tsl = timestamp();
+      delta = eliminacaoGauss(b, jacobiana_x, invert_x);
+      b->tsl = b->tsl + (timestamp() - tsl);
+        
+      //novos x que virao de delta + x
+      for(int a = 0; a<b->max_eq; a++){
+        x_novo[a] = delta[a] + x[a]; //xi+1 = deltai + xi
+      }
+
+      //conferir se devo seguir com a iteracao
+      if(norma_vetor(b, delta)< b->epsilon){
+        return x_novo;
+      }
+
+      //atualizo x antigo com seus novos valores
+      for(int f=0; f<b->max_eq; f++)
+        x[f] = x_novo[f];
+
+    }
+ 
+    
+    //FIM DO LOOP DAS ITERACOES-----------------------------------------------------------------------------------------------------
+
+
+    //impressao das iteracoes x finais
+    fprintf(arq2,"#\n");
+    int inter=1;
+    for(int s=0; s< b->max_eq; s++){
+      fprintf(arq2,"x%d = %f\n", inter , x[s]);
+      inter++;
+    }
+    fprintf(arq2,"#\n");
+
+
+    //free em todo mundo
+    free(x);
+    free(delta);
+    free(x_novo);
+    free(values);
+    free(invert_x);
+    for(int i=0; i< b->max_eq; i++){
+      free(jacobiana_x[i]);
+    }
+    free(jacobiana_x);
+
+    for(int i=0; i< b->max_eq; i++){
+      for(int j=0; j< b->max_eq; j++){
+        free(jacobiana[i][j]);
+      }
+      free(jacobiana[i]);
+    }
+    free(jacobiana);
+
+    for(int j=0; j< b->max_eq; j++){
+      free(incognitas[j]);
+    }
+    
+    return x;
+}
+
+
+
 
