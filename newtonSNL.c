@@ -60,12 +60,13 @@ int main (int argc, char **argv){
             fgets(b->eq[i], 24, arq);
             char ch;
 
+            //para garantir que vai ser puxada uma linha nao vazia garantindo q nao venha lixo
             if(strlen(b->eq[i]) > 0){
                 ch = b->eq[i][0];
             }
 
 
-            // analiza se foi feita a leitura de string inválida
+            // analiza se foi feita a leitura de string inválida, confere se nao eh "\r" ou "\n"
             if(b->eq[i] == NULL || ch == 13 || ch==10){ 
                 fgets(b->eq[i], 24, arq);
             }
@@ -108,6 +109,10 @@ int main (int argc, char **argv){
         b->max_iter = atoi(max_iter);
         // -------------------------------------------------------------------------------------------------------------------------------------
 
+         //"falhando graciosamente"
+        if(!b->x0 || !b->eq){
+            fprintf(stderr, "Erro ao alocar variáveis\n");
+        }
 
         // Prints ------------------------------------------------------------------------------------------------------------------------------
         fprintf(arq2,"\n---------Início do bloco ------------------------------------\n");
@@ -118,9 +123,8 @@ int main (int argc, char **argv){
         // -------------------------------------------------------------------------------------------------------------------------------------
 
         // Método de Newton. -------------------------------------------------------------------------------------------------------------------
-        if(cont_bag < 5) {
-            newton(b, arq2, cont_bag);
-        }
+        newton(b, arq2, cont_bag);
+        
         
         b->ttotal = timestamp() - b->ttotal;
 
@@ -136,6 +140,8 @@ int main (int argc, char **argv){
         // -------------------------------------------------------------------------------------------------------------------------------------
 
         fgetc(arq); // ler \n que sobrou
+
+        //free em todo mundo
         for(int c=0; c<b->max_eq; c++)
             free(b->eq[c]);
         free(b);
@@ -144,6 +150,7 @@ int main (int argc, char **argv){
     }
     // -----------------------------------------------------------------------------------------------------------------------------------------
 
+    //fechar arquivos
     fclose(arq);
     fclose(arq2);
 }
